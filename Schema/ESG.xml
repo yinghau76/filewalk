@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FileSchema>
+  <Struct name="FragmentManagementInformation">
+    <Description>The Fragment Management Information provides the encapsulation mechanism for a set of ESG fragments, by providing the ability to assign a unique identifier (fragment_id) for the lifetime of an ESG fragment and indicating the current version of an ESG fragment.</Description>
+    <Field name="reserved" type="b1" />
+    <Field name="fragment_reference_format" type="b1">
+      <Enum name="Generic ESG Fragment Reference" value="0x21" />
+      <Enum name="User defined" value="0xE1" />
+    </Field>
+    <Array name="fragment_references" type="GenericEsgFragmentReference" condition="$(fragment_reference_format) == 33" />
+  </Struct>
+  <Struct name="GenericEsgFragmentReference">
+    <Field name="esg_fragment_type" type="b1">
+      <Enum name="Encapsulated ESG XML Fragment" value="0x00" />
+      <Enum name="Encapsulated ESG Auxiliary Data" value="0x01" />
+      <Enum name="Encapsulated Private Auxiliary Data" value="0x02" />
+    </Field>
+    <Field name="esg_data_repository_offset" type="U24"/>
+    <Field name="fragment_version" type="b1"/>
+    <Field name="fragment_id" type="U24"/>
+  </Struct>
+  <Struct name="EsgDataRepository">
+    <Description>The ESG Data Repository can hold any type of ESG Fragment. The type of the ESG Fragment and the position inside the ESG Data Repository is signalled by the Fragment Management Information.</Description>
+  </Struct>
+  <Struct name="DataRepository"></Struct>
+  <Struct name="IndexList"></Struct>
+  <Struct name="Index"></Struct>
+  <Struct name="MultiFieldSubIndex"></Struct>
+  <Struct name="SessionPartitionDeclaration"></Struct>
+  <Struct name="InitMessage"></Struct>
+
+  <Struct name="EsgAuxiliaryData"></Struct>
+  <Struct name="PrivateAuxiliaryData"></Struct>
+  <Struct name="XmlFragment">
+    <Field name="ESG_XML_fragment_type" type="U16">
+      <Enum name="ESGMain Fragment" value="0x0020" />
+      <Enum name="Content Fragment" value="0x0021" />
+      <Enum name="ScheduleEvent Fragment" value="0x0022" />
+      <Enum name="Service Fragment" value="0x0023" />
+      <Enum name="ServiceBundle Fragment" value="0x0024" />
+      <Enum name="Acquisition fragment" value="0x0025" />
+      <Enum name="Purchase Fragment" value="0x0026" />
+      <Enum name="PurchaseChannel Fragment" value="0x0027" />
+    </Field>
+    <Field name="data_length" type="V" />
+    <Field name="data_byte" type="z" />
+  </Struct>
+  <Struct name="ESGAccessDescriptor">
+    <Field name="numEsgEntries" type="U16"/>
+    <Array name="entries" type="EsgEntry" length="numEsgEntries" />
+  </Struct>
+  <Struct name="EsgEntry">
+    <Field name="ESGEntryVersion" type="b1" />
+    <Field name="ESGEntryLength" type="V" />
+    <Field type="b1">
+      <BitsField name="MultipleStreamTransport" offset="7" length="1"/>
+      <BitsField name="IPVersion6" offset="6" length="1"/>
+    </Field>
+    <Field name="ProviderID" type="U16" />
+    <Field name="SourceIPAddressIPv6" type="b16" condition="$(IPVersion6)==1"/>
+    <Field name="DestinationIPAddressIPv6" type="b16" condition="$(IPVersion6)==1"/>
+    <Field name="SourceIPAddressIPv4" type="i32" format="ipv4" condition="$(IPVersion6)==0"/>
+    <Field name="DestinationIPAddressIPv4" type="i32" format="ipv4" condition="$(IPVersion6)==0"/>
+    <Field name="Port" type="U16" />
+    <Field name="TSI" type="U16">
+      <Description>Specifies the transport session identifier (TSI) of the FLUTE session in which the ESG is transported.</Description>
+    </Field>
+  </Struct>
+</FileSchema>

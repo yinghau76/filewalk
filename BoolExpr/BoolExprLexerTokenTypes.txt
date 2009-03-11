@@ -1,0 +1,20 @@
+// $ANTLR 2.7.5 (20050128): boolexpr.g -> BoolExprLexerTokenTypes.txt$
+BoolExprLexer    // output token vocab name
+LITERAL=4
+QLITERAL=5
+ESC=6
+NEWLINE=7
+WS=8
+VAR=9
+LPAREN=10
+RPAREN=11
+OR=12
+AND=13
+EQUAL=14
+ASSIGN=15
+NOT_EQUAL=16
+NOT=17
+LESSTHAN=18
+LESSEQUAL=19
+GE=20
+GT=21

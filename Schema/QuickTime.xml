@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FileSchema>
+  <Struct name="moov">
+    <Description>These atoms act as a container for the information that describes a movie’s data. This information, or meta-data, is stored in a number of different types of atoms. Generally speaking, only meta-data is stored in a movie atom. Sample data for the movie, such as audio or video samples, are referenced in the movie atom, but are not contained in it.</Description>
+  </Struct>
+  <Struct name="trak">
+    <Description>This is a container box for a single track of a presentation. A presentation consists of one or more tracks. Each track is independent of the other tracks in the presentation and carries its own temporal and spatial information. Each track will contain its associated Media Box. Tracks are used for two purposes: (a) to contain media data (media tracks) and (b) to contain packetization information for streaming protocols (hint tracks). There shall be at least one media track within an ISO file, and all the media tracks that contributed to the hint tracks shall remain in the file, even if the media data within them is not referenced by the hint tracks; after deleting all hint tracks, the entire un-hinted presentation shall remain.</Description>
+  </Struct>
+  <Struct name="edts"/>
+  <Struct name="mdia">
+    <Description>The media declaration container contains the objects that declare information about the media data within a track.</Description>
+  </Struct>
+  <Struct name="minf">
+    <Description>This box contains all the objects that declare characteristic information of the media in the track.</Description>
+  </Struct>
+  <Struct name="dinf">
+    <Description>The data information box contains objects that declare the location of the media information in a track.</Description>
+  </Struct>
+  <Struct name="stbl">
+    <Description>The sample table contains all the time and data indexing of the media samples in a track. Using the tables here, it is possible to locate samples in time, determine their type (e.g. I-frame or not), and determine their size, container, and offset into that container.</Description>
+  </Struct>
+  <Struct name="mdat">
+    <Description>This box contains the media data. In video tracks, this box would contain video frames. A presentation may contain zero or more Media Data Boxes. The actual media data follows the type field; its structure is described by the metadata</Description>
+    <Array name="data" type="b1" length="1" format="x2"/>
+  </Struct>
+  <Struct name="uuid">
+    <Array name="usertype" length="16" type="b1" format="x"/>
+    <Array name="data" type="b1" format="x2"/>
+  </Struct>
+  <Struct name="FullBox">
+    <Field name="version" type="b1">
+      <Description>an integer that specifies the version of this format of the box.</Description>
+    </Field>
+    <Field name="flags" type="U24" format="x6">
+      <Description>a map of flags</Description>
+    </Field>
+  </Struct>
+  <Struct name="elstEntry">
+    <Field name="segment_duration32" type="U32" condition="$(parent.base.version) == 0"/>
+    <Field name="media_time32" type="I32" condition="$(parent.base.version) == 0"/>
+    <Field name="segment_duration64" type="U64" condition="$(parent.base.version) == 1"/>
+    <Field name="media_time64" type="I64" condition="$(parent.base.version) == 1"/>
+    <Field name="media_rate_integer" type="I16"/>
+    <Field name="media_rate_fraction" type="I16"/>
+  </Struct>
+  <Struct name="elst">
+    <Description>This box contains an explicit timeline map. Each entry defines part of the track time-line: by mapping part of the media time-line, or by indicating ‘empty’ time, or by defining a ‘dwell’, where a single time-point in the media is held for a period.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="entry_count" type="U32"/>
+    <Array name="entry" type="elstEntry" length="entry_count"/>
+  </Struct>
+  <Struct name="mvhd">
+    <Description>You use the movie header atom to specify the characteristics of an entire QuickTime movie. The data contained in this atom defines characteristics of the entire QuickTime movie, such as time scale and duration.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="Creation time" type="U32">
+      <Description>A 32-bit integer that specifies (in seconds since midnight, January 1, 1904) when the movie atom was created.</Description>
+    </Field>
+    <Field name="Modification time" type="U32">
+      <Description>A 32-bit integer that specifies (in seconds since midnight, January 1, 1904) when the movie atom was changed.</Description>
+    </Field>
+    <Field name="Time scale" type="U32">
+      <Description>A time value that indicates the time scale for this movie—that is, the number of time units that pass per second in its time coordinate system. A time coordinate system that measures time in sixtieths of a second, for example, has a time scale of 60.</Description>
+    </Field>
+    <Field name="Duration" type="U32">
+      <Description>A time value that indicates the duration of the movie in time scale units. Note that this property is derived from the movie’s tracks. The value of this field corresponds to the duration of the longest track in the movie.</Description>
+    </Field>
+    <Field name="Preferred rate" type="U32">
+      <Description>A 32-bit fixed-point number that specifies the rate at which to play this movie. A value of 1.0 indicates normal rate.</Description>
+    </Field>
+    <Field name="Preferred volume" type="I16">
+      <Description>A 16-bit fixed-point number that specifies how loud to play this movie’s sound. A value of 1.0 indicates full volume.</Description>
+    </Field>
+    <Array name="Flags" length="10" type="b1">
+      <Description>Ten bytes reserved for use by Apple. Set to 0.</Description>
+    </Array>
+    <Array name="Matrix structure" length="36" type="b1">
+      <Description>The matrix structure associated with this movie. A matrix shows how to map points from one coordinate space into another. See “Matrices” (page 207) for a discussion of how display matrices are used in QuickTime.</Description>
+    </Array>
+    <Field name="Preview time" type="U32">
+      <Description>The time value in the movie at which the preview begins.</Description>
+    </Field>
+    <Field name="Preview duration" type="U32">
+      <Description>The duration of the movie preview in movie time scale units.</Description>
+    </Field>
+    <Field name="Poster time" type="U32">
+      <Description>The time value of the time of the movie poster.</Description>
+    </Field>
+    <Field name="Selection time" type="U32">
+      <Description>The time value for the start time of the current selection.</Description>
+    </Field>
+    <Field name="Selection duration" type="U32">
+      <Description>The duration of the current selection in movie time scale units.</Description>
+    </Field>
+    <Field name="Current time" type="U32">
+      <Description>The time value for current time position within the movie.</Description>
+    </Field>
+    <Field name="Next track ID" type="U32">
+      <Description>A 32-bit integer that indicates a value to use for the track ID number of the next track added to this movie. Note that 0 is not a valid track ID value.</Description>
+    </Field>
+  </Struct>
+  <Struct name="ftyp">
+    <Description>A media-file structured to this part of this specification may be compatible with more than one detailed specification, and it is therefore not always possible to speak of a single 'type' or 'brand' for the file. This means that the utility of the file name extension and mime type are somewhat reduced. This box must be placed as early as possible in the file (e.g. after any obligatory signature, but before any significant variable-size boxes such as a Movie Box, Media Data Box, or Free Space). It identifies which specification is the 'best use' of the file, and a minor version of that specification; and also a set of other specifications to which the file complies. Readers implementing this format should attempt to read files that are marked as compatible with any of the specifications that the reader implements. Any incompatible change in a specification should therefore register a new 'brand' identifier to identify files conformant to the new specification.</Description>
+    <Field name="major_brand" type="s4"/>
+    <Field name="minor_version" type="U32" format="x"/>
+    <Array name="compatible_brands" type="s4"/>
+  </Struct>
+  <Struct name="tkhd">
+    <Description>The track header atom specifies the characteristics of a single track within a movie. A track header atom contains a size field that specifies the number of bytes and a type field that indicates the format of the data (defined by the atom type 'tkhd').</Description>
+    <Field name="Version" type="b1">
+      <Description>A 1-byte specification of the version of this track header.</Description>
+    </Field>
+    <Field name="Flags" type="U24" format="x3">
+      <Flag name="enabled" mask="0x0001"/>
+      <Flag name="used in the movie" mask="0x0002"/>
+      <Flag name="used in the movie’s preview" mask="0x0004"/>
+      <Flag name="used in the movie’s poster" mask="0x0008"/>
+    </Field>
+
+    <Field name="Creation time" type="U32">
+      <Description>A 32-bit integer that indicates (in seconds since midnight, January 1, 1904) when the track header was created.</Description>
+    </Field>
+    <Field name="Modification time" type="U32">
+      <Description>A 32-bit integer that indicates (in seconds since midnight, January 1, 1904) when the track header was changed.</Description>
+    </Field>
+    <Field name="Track ID" type="U32">
+      <Description>A 32-bit integer that uniquely identifies the track. The value 0 cannot be used.</Description>
+    </Field>
+    <Field name="Reserved" type="U32">
+      <Description>A 32-bit integer that is reserved for use by Apple. Set this field to 0.</Description>
+    </Field>
+    <Field name="Duration" type="U32">
+      <Description>A time value that indicates the duration of this track (in the movie’s time coordinate system). Note that this property is derived from the track’s edits. The value of this field is equal to the sum of the durations of all of the track’s edits. If there is no edit list, then the duration is the sum of the sample durations, converted into the movie timescale.</Description>
+    </Field>
+    <Array name="Reserved" length="8" type="b1">
+      <Description>An 8-byte value that is reserved for use by Apple. Set this field to 0.</Description>
+    </Array>
+    <Field name="Layer" type="U16">
+      <Description>A 16-bit integer that indicates this track’s spatial priority in its movie. The QuickTime Movie Toolbox uses this value to determine how tracks overlay one another. Tracks with lower layer values are displayed in front of tracks with higher layer values.</Description>
+    </Field>
+    <Field name="Alternate group" type="U16">
+      <Description>A 16-bit integer that specifies a collection of movie tracks that contain alternate data for one another. QuickTime chooses one track from the group to be used when the movie is played. The choice may be based on such considerations as playback quality, language, or the capabilities of the computer.</Description>
+    </Field>
+    <Field name="Volume" type="U16">
+      <Description>A 16-bit fixed-point value that indicates how loudly this track’s sound is to be played. A value of 1.0 indicates normal volume.</Description>
+    </Field>
+    <Field name="Reserved" type="U16">
+      <Description>A 16-bit integer that is reserved for use by Apple. Set this field to 0.</Description>
+    </Field>
+    <Array name="Matrix structure" type="b1" length="36">
+      <Description>The matrix structure associated with this track. See Figure 4-1 (page 208) for an illustration of a matrix structure.</Description>
+    </Array>
+    <Field name="Track width" type="U32">
+      <Description>A 32-bit fixed-point number that specifies the width of this track in pixels.</Description>
+    </Field>
+    <Field name="Track height" type="U32">
+      <Description>A 32-bit fixed-point number that indicates the height of this track in pixels.</Description>
+    </Field>
+  </Struct>
+  <Struct name="mdhd">
+    <Description>The media header declares overall information that is media-independent, and relevant to characteristics of the media in a track.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="creation_time" type="U32"/>
+    <Field name="modification_time" type="U32"/>
+    <Field name="timescale" type="U32"/>
+    <Field name="duration" type="U32"/>
+    <Field name="language" type="U16"/>
+    <Field name="pre_defined" type="U16"/>
+  </Struct>
+  <Struct name="hdlr">
+    <Description>This box within a Media Box declares the process by which the media-data in the track is presented, and thus, the nature of the media in a track. For example, a video track would be handled by a video handler.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="pre_defined" type="U32"/>
+    <Field name="handler_type" type="s4"/>
+    <Field name="reserved" type="U32"/>
+    <Field name="name" type="z"/>
+  </Struct>
+  <Struct name="vmhd">
+    <Description>The video media header contains general presentation information, independent of the coding, for video media. Note that the flags field has the value 1.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="graphicsmode" type="U16"/>
+    <Array name="opcolor" length="3" type="b1"/>
+  </Struct>
+  <Struct name="smhd">
+    <Description>The sound media header contains general presentation information, independent of the coding, for audio media. This header is used for all tracks containing audio.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="balance" type="U16"/>
+    <Field name="reserved" type="U16"/>
+  </Struct>
+  <Struct name="DataEntryUrlBox">
+    <Field name="location" type="z"/>
+  </Struct>
+  <Struct name="DataEntryUrnBox">
+    <Field name="name" type="z"/>
+    <Field name="location" type="z"/>
+  </Struct>
+  <Struct name="DataReferenceEntry">
+    <Struct name="box" type="Box"/>
+    <Struct name="fullbox" type="FullBox"/>
+    <Struct name="DataEntryUrnBox" type="DataEntryUrnBox" condition="$(box.type) == 'urn '"/>
+    <Struct name="DataEntryUrlBox" type="DataEntryUrlBox" condition="$(box.type) == 'url '"/>
+  </Struct>
+  <Struct name="dref">
+    <Description>The data reference object contains a table of data references (normally URLs) that declare the location(s) of the media data used within the presentation. The data reference index in the sample description ties entries in this table to the samples in the track. A track may be split over several sources in this way.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="entry_count" type="U32"/>
+    <Array name="entry" type="DataReferenceEntry" length="entry_count"/>
+  </Struct>
+  <Struct name="url ">
+    <Description>The data reference object contains a table of data references (normally URLs) that declare the location(s) of the media data used within the presentation. The data reference index in the sample description ties entries in this table to the samples in the track. A track may be split over several sources in this way.</Description>
+  </Struct>
+  <Struct name="urn ">
+    <Description>The data reference object contains a table of data references (normally URLs) that declare the location(s) of the media data used within the presentation. The data reference index in the sample description ties entries in this table to the samples in the track. A track may be split over several sources in this way.</Description>
+  </Struct>
+  <Struct name="Box">
+    <Field name="size" type="U32"/>
+    <Field name="type" type="s4"/>
+  </Struct>
+  <Struct name="SampleEntry">
+    <Struct name="base" type="Box"/>
+    <Array name="reserved" length="6" type="b1"/>
+    <Field name="data_reference_index" type="U16"/>
+  </Struct>
+  <Struct name="VideoSampleEntry">
+    <Struct name="sample_entry" type="SampleEntry"/>
+    <Field name="version" type="U16"/>
+    <Field name="revision_level" type="U16"/>
+	<Field name="vendor" type="U32"/>
+    <Field name="temporal_quality" type="U32"/>
+    <Field name="spatial_quality" type="U32"/>
+    <Field name="width" type="U16"/>
+    <Field name="height" type="U16"/>
+    <Field name="horizresolution" type="U32" format="x"/>
+    <Field name="vertresolution" type="U32" format="x"/>
+    <Field name="reserved" type="U32"/>
+    <Field name="frame_count" type="U16"/>
+    <Field name="compressorname" type="s32"/>
+    <Field name="depth" type="U16"/>
+    <Field name="color_table_ID" type="I16"/>
+	<Struct name="extension" type="VideoSampleDescriptionExtension"/>
+  </Struct>
+
+	<Struct name="VideoSampleDescriptionExtension">
+	  <Struct name="base" type="Box"/>
+	  <Struct name="avcc" type="AvcCExtension" condition="$(base.type) == 'avcC'"/>
+	</Struct>
+	<Struct name="AvcCExtension">
+		<Field name="version" type="b1"></Field>
+		<Field name="profile" type="b1"></Field>
+		<Field name="profile compat" type="b1"></Field>
+		<Field name="level" type="b1"></Field>
+		<Field name="6 bits reserved (111111) + 2 bits nal size length - 1" type="b1"></Field>
+		<Field name="3 bits reserved (111) + 5 bits number of sps" type="b1"></Field>
+		<Field name="sps_size" type="U16"></Field>
+		<Array name="sps" type="b1" length="sps_size" format="x"></Array>
+		<Field name="number of pps" type="b1"></Field>
+		<Field name="pps_size" type="U16"></Field>
+		<Array name="pps" type="b1" length="pps_size" format="x"></Array>
+	</Struct>
+
+  <Struct name="AudioSampleEntry">
+    <Struct name="sample_entry" type="SampleEntry"/>
+    <Field name="version" type="U16"/>
+    <Field name="revision_level" type="U16"/>
+    <Field name="vendor" type="U32"/>
+	<Field name="channel_count" type="U16"/>
+    <Field name="sample_size" type="U16"/>
+    <Field name="compression_ID" type="U16"/>
+    <Field name="packet_size" type="U16"/>
+    <Field name="samplerate" type="U32" format="x"/>
+  </Struct>
+  <Struct name="HintSampleEntry">
+    <Struct name="sample_entry" type="SampleEntry"/>
+    <Array name="data" type="b1" length="1"/>
+  </Struct>
+  <Struct name="stsd">
+    <Description>The sample description table gives detailed information about the coding type used, and any initialization information needed for that coding. The information stored in the sample description box after the entry-count is both track-type specific as documented here, and can also have variants within a track type (e.g. different codings may use different specific information after some common fields, even within a video track).</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="entry_count" type="U32"/>
+    <Array name="AudioSampleEntry" type="AudioSampleEntry" length="entry_count" condition="$(parent.parent.parent.hdlr.handler_type) == 'soun'"/>
+    <Array name="VideoSampleEntry" type="VideoSampleEntry" length="entry_count" condition="$(parent.parent.parent.hdlr.handler_type) == 'vide'"/>
+    <Array name="HintSampleEntry" type="HintSampleEntry" length="entry_count" condition="$(parent.parent.parent.hdlr.handler_type) == 'hint'"/>
+  </Struct>
+  <Struct name="sttsEntry">
+    <Field name="sample_count" type="U32" />
+    <Field name="sample_delta" type="U32" />
+  </Struct>
+  <Struct name="stts">
+    <Description>This box contains a compact version of a table that allows indexing from decoding time to sample number. Other tables give sample sizes and pointers, from the sample number. Each entry in the table gives the number of consecutive samples with the same time delta, and the delta of those samples. By adding the deltas a complete time-to-sample map may be built.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="entry_count" type="U32" />
+    <Array name="entries" type="sttsEntry" length="entry_count" />
+  </Struct>
+  <Struct name="stssEntry">
+    <Field name="sample_number" type="U32" />
+  </Struct>
+  <Struct name="stss">
+    <Description>This box provides a compact marking of the random access points within the stream. The table is arranged in strictly increasing order of sample number.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="entry_count" type="U32" />
+    <Array name="entries" type="stssEntry" length="entry_count" />
+  </Struct>
+  <Struct name="stscEntry">
+    <Field name="first_chunk" type="U32" />
+    <Field name="samples_per_chunk" type="U32" />
+    <Field name="sample_description_index" type="U32" />
+  </Struct>
+  <Struct name="stsc">
+    <Description>Samples within the media data are grouped into chunks. Chunks can be of different sizes, and the samples within a chunk can have different sizes. This table can be used to find the chunk that contains a sample, its position, and the associated sample description. The table is compactly coded. Each entry gives the index of the first chunk of a run of chunks with the same characteristics. By subtracting one entry here from the previous one, you can compute how many chunks are in this run. You can convert this to a sample count by multiplying by the appropriate samples-per-chunk.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="entry_count" type="U32" />
+    <Array name="entries" type="stscEntry" length="entry_count" />
+  </Struct>
+  <Struct name="stsz">
+    <Description>This box contains the sample count and a table giving the size in bytes of each sample. This allows the media data itself to be unframed. The total number of samples in the media is always indicated in the sample count.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="sample_size" type="U32" />
+    <Field name="sample_count" type="U32" />
+    <Array name="sample_bytes" type="U32" length="sample_count" />
+  </Struct>
+  <Struct name="stcoEntry">
+    <Field name="chunk_offset" type="U32" />
+  </Struct>
+  <Struct name="stco">
+    <Description>The chunk offset table gives the index of each chunk into the containing file. There are two variants, permitting the use of 32-bit or 64-bit offsets. The latter is useful when managing very large presentations. At most one of these variants will occur in any single instance of a sample table.</Description>
+    <Struct name="base" type="FullBox"/>
+    <Field name="entry_count" type="U32" />
+    <Array name="entries" type="stcoEntry" length="entry_count" />
+  </Struct>
+  <Struct name="edts">
+    <Description>An Edit Box maps the presentation time-line to the media time-line as it is stored in the file. The Edit Box is a container for the edit lists. The Edit Box is optional. In the absence of this box, there is an implicit one-to-one mapping of these time-lines, and the presentation of a track starts at the beginning of the presentation. An empty edit is used to offset the start time of a track.</Description>
+  </Struct>
+  <Struct name="eslt">
+    <Description>This box contains an explicit timeline map. Each entry defines part of the track time-line: by mapping part of the media time-line, or by indicating ‘empty’ time, or by defining a ‘dwell’, where a single time-point in the media is held for a period.</Description>
+    <Array name="data" type="b1"/>
+  </Struct>
+</FileSchema>

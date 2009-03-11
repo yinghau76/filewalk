@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FileSchema>
+  <Struct name="LIST">
+  </Struct>
+  <Struct name="avih">
+    <Description>The AVIMAINHEADER structure defines global information in an AVI file.</Description>
+    <Field name="dwMicroSecPerFrame" type="u32">
+      <Description>Specifies the number of microseconds between frames. This value indicates the overall timing for the file.</Description>
+    </Field>
+    <Field name="dwMaxBytesPerSec" type="u32">
+      <Description>Specifies the approximate maximum data rate of the file. This value indicates the number of bytes per second the system must handle to present an AVI sequence as specified by the other parameters contained in the main header and stream header chunks.</Description>
+    </Field>
+    <Field name="dwPaddingGranularity" type="u32">
+      <Description>Specifies the alignment for data, in bytes. Pad the data to multiples of this value.</Description>
+    </Field>
+    <Field name="dwFlags" type="u32">
+      <Flag name="AVIF_HASINDEX" mask="0x00000010" />
+      <Flag name="AVIF_MUSTUSEINDEX" mask="0x00000020" />
+      <Flag name="AVIF_ISINTERLEAVED" mask="0x00000100" />
+      <Flag name="AVIF_TRUSTCKTYPE" mask="0x00000800" />
+      <Flag name="AVIF_WASCAPTUREFILE" mask="0x00010000" />
+      <Flag name="AVIF_COPYRIGHTED" mask="0x00020000" />
+    </Field>
+    <Field name="dwTotalFrames" type="u32"/>
+    <Field name="dwInitialFrames" type="u32"/>
+    <Field name="dwStreams" type="u32"/>
+    <Field name="dwSuggestedBufferSize" type="u32"/>
+    <Field name="dwWidth" type="u32"/>
+    <Field name="dwHeight" type="u32"/>
+    <Array name="dwReserved" length="4" type="u32"/>
+  </Struct>
+  <Struct name="strh">
+    <Description>The AVISTREAMHEADER structure contains information about one stream in an AVI file.</Description>
+    <Field name="fccType" type="s4"/>
+    <Field name="fccHandler" type="s4"/>
+    <Field name="dwFlags" type="u32"/>
+    <Field name="wPriority" type="u16"/>
+    <Field name="wLanguage" type="u16"/>
+    <Field name="dwInitialFrames" type="u32"/>
+    <Field name="dwScale" type="u32"/>
+    <Field name="dwRate" type="u32"/>
+    <Field name="dwStart" type="u32"/>
+    <Field name="dwLength" type="u32"/>
+    <Field name="dwSuggestedBufferSize" type="u32"/>
+    <Field name="dwQuality" type="u32"/>
+    <Field name="dwSampleSize" type="u32"/>
+    <Field name="rcFrame.left" type="i16"/>
+    <Field name="rcFrame.top" type="i16"/>
+    <Field name="rcFrame.right" type="i16"/>
+    <Field name="rcFrame.bottom" type="i16"/>
+  </Struct>
+  <Struct name="aIndex">
+    <Field name="dwChunkId" type="s4">
+      <Description>Specifies a FOURCC that identifies a stream in the AVI file. The FOURCC must have the form 'xxyy' where xx is the stream number and yy is a two-character code that identifies the contents of the stream:</Description>
+    </Field>
+    <Field name="dwFlags" type="u32">
+      <Description>Specifies a bitwise combination of zero or more of the following flags:</Description>
+      <Flag name="AVIIF_LIST" mask="0x00000001" />
+      <Flag name="AVIIF_KEYFRAME" mask="0x00000010" />
+      <Flag name="AVIIF_NOTIME" mask="0x00000100" />
+    </Field>
+    <Field name="dwOffset" type="u32">
+      <Description>Specifies the location of the data chunk in the file. The value should be specified as an offset, in bytes, from the start of the 'movi' list; however, in some AVI files it is given as an offset from the start of the file.</Description>
+    </Field>
+    <Field name="dwSize" type="u32">
+      <Description>Specifies the size of the data chunk, in bytes.</Description>
+    </Field>
+  </Struct>
+  <Struct name="idx1">
+    <Description>An optional index ('idx1') chunk can follow the 'movi' list. The index contains a list of the data chunks and their location in the file. It consists of an AVIOLDINDEX structure with entries for each data chunk, including 'rec ' chunks. If the file contains an index, set the AVIF_HASINDEX flag in the dwFlags member of the AVIMAINHEADER structure.</Description>
+    <Array name="aIndex" type="aIndex">
+    </Array>
+  </Struct>
+  <Struct name="indx">
+    <Description>Unlike the ‘idx1’ chunk, a single index is stored per stream in the AVI file. An ‘indx’ chunk follows the ‘strf’ chunk in the LIST ‘strl’ chunk of an AVI header. This ‘indx’ chunk may either be an index of indexes (super index), or may be an index to the chunks directly. In the case of video, this means that the chunk is either a AVISUPERINDEX or an AVIFIELDINDEX/AVISTDINDEX.</Description>
+    <Field name="wLongsPerEntry" type="u16">
+      <Description>size of each entry in aIndex array</Description>
+    </Field>
+    <Field name="bIndexSubType" type="b1">
+      <Description>future use. must be 0</Description>
+    </Field>
+    <Field name="bIndexType" type="b1">
+      <Description>one of AVI_INDEX_* codes</Description>
+      <Enum name="AVI_INDEX_OF_INDEXES" value="0" />
+      <Enum name="AVI_INDEX_OF_CHUNKS" value="1" />
+      <Enum name="AVI_INDEX_IS_DATA" value="0x80" />
+    </Field>
+    <Field name="nEntriesInUse" type="u32">
+      <Description>index of first unused member in aIndex array</Description>
+    </Field>
+    <Field name="dwChunkId" type="s4">
+      <Description>fcc of what is indexed</Description>
+    </Field>
+    <Array name="dwReserved" length="3" type="u32">
+      <Description>meaning differs for each index type/subtype. 0 if unused</Description>
+    </Array>
+  </Struct>
+  <Struct name="strf">
+    <Description>A stream format chunk ('strf') must follow the stream header chunk. The stream format chunk describes the format of the data in the stream. The data contained in this chunk depends on the stream type. For video streams, the information is a BITMAPINFO structure, including palette information if appropriate. For audio streams, the information is a WAVEFORMATEX structure.</Description>
+    <Struct name="BITMAPINFOHEADER" type="BITMAPINFOHEADER" condition="$(parent.strh.fccType) == 'vids'" />
+    <Struct name="WAVEFORMATEX" type="WAVEFORMATEX" condition="$(parent.strh.fccType) == 'auds'" />
+  </Struct>
+  <Struct name="strn">
+    <Field name="name" type="z"/>
+  </Struct>
+  <Struct name="dmlh">
+    <Description>The dwTotalFrames field indicates the real size of the AVI file. Since the same field in the Main AVI Header ‘avih’ indicates the size within the first RIFF ‘AVI’ chunk.</Description>
+    <Field name="dwTotalFrames" type="u32"/>
+  </Struct>
+  <Struct name="vprp">
+    <Description>The video properties header identifies video signal properties associated with a digital video stream in an AVI file. This header attempts to address two main video properties: 1) The type of video signal (PAL, NTSC, etc., as well as the resolution of the video signal). 2) The framing of the compression within a video signal.</Description>
+    <Field name="VideoFormatToken" type="u32"/>
+    <Field name="VideoStandard" type="u32"/>
+    <Field name="dwVerticalRefreshRate" type="u32"/>
+    <Field name="dwHTotalInT" type="u32"/>
+    <Field name="dwVTotalInLines" type="u32"/>
+    <Field name="dwFrameAspectRatio" type="u32"/>
+    <Field name="dwFrameWidthInPixels" type="u32"/>
+    <Field name="dwFrameHeightInLines" type="u32"/>
+    <Field name="nbFieldPerFrame" type="u32"/>
+  </Struct>
+  <Struct name="JUNK">
+    <Description>Data can be aligned in an AVI file by inserting 'JUNK' chunks as needed. Applications should ignore the contents of a 'JUNK' chunk.</Description>
+  </Struct>
+  <Struct name="WAVEFORMATEX">
+    <Field name="wFormatTag" type="i16">
+      <Enum name="WAVE_FORMAT_UNKNOWN" value="0x0000" />
+      <Enum name="WAVE_FORMAT_ADPCM" value="0x0002" />
+      <Enum name="WAVE_FORMAT_IEEE_FLOAT" value="0x0003" />
+      <Enum name="WAVE_FORMAT_IBM_CVSD" value="0x0005" />
+      <Enum name="WAVE_FORMAT_ALAW" value="0x0006" />
+      <Enum name="WAVE_FORMAT_MULAW" value="0x0007" />
+      <Enum name="WAVE_FORMAT_OKI_ADPCM" value="0x0010" />
+      <Enum name="WAVE_FORMAT_IMA_ADPCM" value="0x0011" />
+      <Enum name="WAVE_FORMAT_MEDIASPACE_ADPCM" value="0x0012" />
+      <Enum name="WAVE_FORMAT_SIERRA_ADPCM" value="0x0013" />
+      <Enum name="WAVE_FORMAT_G723_ADPCM" value="0x0014" />
+      <Enum name="WAVE_FORMAT_DIGISTD" value="0x0015" />
+      <Enum name="WAVE_FORMAT_DIGIFIX" value="0x0016" />
+      <Enum name="WAVE_FORMAT_DIALOGIC_OKI_ADPCM" value="0x0017" />
+      <Enum name="WAVE_FORMAT_MEDIAVISION_ADPCM" value="0x0018" />
+      <Enum name="WAVE_FORMAT_YAMAHA_ADPCM" value="0x0020" />
+      <Enum name="WAVE_FORMAT_SONARC" value="0x0021" />
+      <Enum name="WAVE_FORMAT_DSPGROUP_TRUESPEECH" value="0x0022" />
+      <Enum name="WAVE_FORMAT_ECHOSC1" value="0x0023" />
+      <Enum name="WAVE_FORMAT_AUDIOFILE_AF36" value="0x0024" />
+      <Enum name="WAVE_FORMAT_APTX" value="0x0025" />
+      <Enum name="WAVE_FORMAT_AUDIOFILE_AF10" value="0x0026" />
+      <Enum name="WAVE_FORMAT_DOLBY_AC2" value="0x0030" />
+      <Enum name="WAVE_FORMAT_GSM610" value=" 0x0031" />
+      <Enum name="WAVE_FORMAT_MSNAUDIO" value="0x0032" />
+      <Enum name="WAVE_FORMAT_ANTEX_ADPCME" value="0x0033" />
+      <Enum name="WAVE_FORMAT_CONTROL_RES_VQLPC" value="0x0034" />
+      <Enum name="WAVE_FORMAT_DIGIREAL" value="0x0035" />
+      <Enum name="WAVE_FORMAT_DIGIADPCM" value="0x0036" />
+      <Enum name="WAVE_FORMAT_CONTROL_RES_CR10" value="0x0037" />
+      <Enum name="WAVE_FORMAT_NMS_VBXADPCM" value="0x0038" />
+      <Enum name="WAVE_FORMAT_CS_IMAADPCM" value="0x0039" />
+      <Enum name="WAVE_FORMAT_ECHOSC3" value="0x003A" />
+      <Enum name="WAVE_FORMAT_ROCKWELL_ADPCM" value="0x003B" />
+      <Enum name="WAVE_FORMAT_ROCKWELL_DIGITALK" value="0x003C" />
+      <Enum name="WAVE_FORMAT_XEBEC" value="0x003D" />
+      <Enum name="WAVE_FORMAT_G721_ADPCM" value="0x0040" />
+      <Enum name="WAVE_FORMAT_G728_CELP" value="0x0041" />
+      <Enum name="WAVE_FORMAT_MPEG" value="0x0050" />
+      <Enum name="WAVE_FORMAT_MPEGLAYER3" value="0x0055" />
+      <Enum name="WAVE_FORMAT_CIRRUS" value="0x0060" />
+      <Enum name="WAVE_FORMAT_ESPCM" value="0x0061" />
+      <Enum name="WAVE_FORMAT_VOXWARE" value="0x0062" />
+      <Enum name="WAVEFORMAT_CANOPUS_ATRAC" value="0x0063" />
+      <Enum name="WAVE_FORMAT_G726_ADPCM" value="0x0064" />
+      <Enum name="WAVE_FORMAT_G722_ADPCM" value="0x0065" />
+      <Enum name="WAVE_FORMAT_DSAT" value="0x0066" />
+      <Enum name="WAVE_FORMAT_DSAT_DISPLAY" value="0x0067" />
+      <Enum name="WAVE_FORMAT_SOFTSOUND" value="0x0080" />
+      <Enum name="WAVE_FORMAT_RHETOREX_ADPCM" value="0x0100" />
+      <Enum name="WAVE_FORMAT_CREATIVE_ADPCM" value="0x0200" />
+      <Enum name="WAVE_FORMAT_CREATIVE_FASTSPEECH8" value="0x0202" />
+      <Enum name="WAVE_FORMAT_CREATIVE_FASTSPEECH10" value="0x0203" />
+      <Enum name="WAVE_FORMAT_QUARTERDECK" value="0x0220" />
+      <Enum name="WAVE_FORMAT_FM_TOWNS_SND" value="0x0300" />
+      <Enum name="WAVE_FORMAT_BTV_DIGITAL" value="0x0400" />
+      <Enum name="WAVE_FORMAT_OLIGSM" value="0x1000" />
+      <Enum name="WAVE_FORMAT_OLIADPCM" value="0x1001" />
+      <Enum name="WAVE_FORMAT_OLICELP" value="0x1002" />
+      <Enum name="WAVE_FORMAT_OLISBC" value="0x1003" />
+      <Enum name="WAVE_FORMAT_OLIOPR" value="0x1004" />
+      <Enum name="WAVE_FORMAT_LH_CODEC" value="0x1100" />
+      <Enum name="WAVE_FORMAT_NORRIS" value="0x1400" />
+      <Enum name="WAVE_FORMAT_ISIAUDIO" value="0x1401" />
+      <Enum name="WAVE_FORMAT_SOUNDSPACE_MUSICOMPRESS" value="0x1500" />
+      <Enum name="VoxWare RT24 speech codec" value="0x181C" />
+      <Enum name="NCT ALF2CD codec" value="0x1FC4" />
+      <Enum name="WAVE_FORMAT_AC3" value="0x2000" />
+      <Enum name="MEDIA_SUBTYPE_DTS" value="0x2001" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_1" value="0x674f" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_2" value="0x6750" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_3" value="0x6751" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_1_PLUS" value="0x676f" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_2_PLUS" value="0x6770" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_3_PLUS" value="0x6771" />
+      <Enum name="GSM-AMR (CBR, no SID)" value="0x7A21" />
+      <Enum name="GSM-AMR (VBR, including SID)" value="0x7A22" />
+    </Field>
+    <Field name="nChannels" type="i16"/>
+    <Field name="nSamplesPerSec" type="u32"/>
+    <Field name="nAvgBytesPerSec" type="u32"/>
+    <Field name="nBlockAlign" type="u16"/>
+    <Field name="wBitsPerSample" type="u16"/>
+    <Field name="cbSize" type="u16"/>
+  </Struct>
+  <Struct name="BITMAPINFOHEADER">
+    <Field name="biSize" type="u32"/>
+    <Field name="biWidth" type="i32"/>
+    <Field name="biHeight" type="i32"/>
+    <Field name="biPlanes" type="u16"/>
+    <Field name="biBitCount" type="u16"/>
+    <Field name="biCompression" type="s4"/>
+    <Field name="biSizeImage" type="u32"/>
+    <Field name="biXPelsPerMeter" type="i32"/>
+    <Field name="biYPelsPerMeter" type="i32"/>
+    <Field name="biClrUsed" type="u32"/>
+    <Field name="biClrImportant" type="u32"/>
+  </Struct>
+  <Struct name="fmt ">
+    <Field name="wFormatTag" type="u16">
+      <Enum name="WAVE_FORMAT_UNKNOWN" value="0x0000" />
+      <Enum name="Microsoft Pulse Code Modulation (PCM)" value="0x0001" />
+      <Enum name="WAVE_FORMAT_ADPCM" value="0x0002" />
+      <Enum name="WAVE_FORMAT_IEEE_FLOAT" value="0x0003" />
+      <Enum name="WAVE_FORMAT_IBM_CVSD" value="0x0005" />
+      <Enum name="WAVE_FORMAT_ALAW" value="0x0006" />
+      <Enum name="WAVE_FORMAT_MULAW" value="0x0007" />
+      <Enum name="WAVE_FORMAT_OKI_ADPCM" value="0x0010" />
+      <Enum name="WAVE_FORMAT_IMA_ADPCM" value="0x0011" />
+      <Enum name="WAVE_FORMAT_MEDIASPACE_ADPCM" value="0x0012" />
+      <Enum name="WAVE_FORMAT_SIERRA_ADPCM" value="0x0013" />
+      <Enum name="WAVE_FORMAT_G723_ADPCM" value="0x0014" />
+      <Enum name="WAVE_FORMAT_DIGISTD" value="0x0015" />
+      <Enum name="WAVE_FORMAT_DIGIFIX" value="0x0016" />
+      <Enum name="WAVE_FORMAT_DIALOGIC_OKI_ADPCM" value="0x0017" />
+      <Enum name="WAVE_FORMAT_MEDIAVISION_ADPCM" value="0x0018" />
+      <Enum name="WAVE_FORMAT_YAMAHA_ADPCM" value="0x0020" />
+      <Enum name="WAVE_FORMAT_SONARC" value="0x0021" />
+      <Enum name="WAVE_FORMAT_DSPGROUP_TRUESPEECH" value="0x0022" />
+      <Enum name="WAVE_FORMAT_ECHOSC1" value="0x0023" />
+      <Enum name="WAVE_FORMAT_AUDIOFILE_AF36" value="0x0024" />
+      <Enum name="WAVE_FORMAT_APTX" value="0x0025" />
+      <Enum name="WAVE_FORMAT_AUDIOFILE_AF10" value="0x0026" />
+      <Enum name="WAVE_FORMAT_DOLBY_AC2" value="0x0030" />
+      <Enum name="WAVE_FORMAT_GSM610" value=" 0x0031" />
+      <Enum name="WAVE_FORMAT_MSNAUDIO" value="0x0032" />
+      <Enum name="WAVE_FORMAT_ANTEX_ADPCME" value="0x0033" />
+      <Enum name="WAVE_FORMAT_CONTROL_RES_VQLPC" value="0x0034" />
+      <Enum name="WAVE_FORMAT_DIGIREAL" value="0x0035" />
+      <Enum name="WAVE_FORMAT_DIGIADPCM" value="0x0036" />
+      <Enum name="WAVE_FORMAT_CONTROL_RES_CR10" value="0x0037" />
+      <Enum name="WAVE_FORMAT_NMS_VBXADPCM" value="0x0038" />
+      <Enum name="WAVE_FORMAT_CS_IMAADPCM" value="0x0039" />
+      <Enum name="WAVE_FORMAT_ECHOSC3" value="0x003A" />
+      <Enum name="WAVE_FORMAT_ROCKWELL_ADPCM" value="0x003B" />
+      <Enum name="WAVE_FORMAT_ROCKWELL_DIGITALK" value="0x003C" />
+      <Enum name="WAVE_FORMAT_XEBEC" value="0x003D" />
+      <Enum name="WAVE_FORMAT_G721_ADPCM" value="0x0040" />
+      <Enum name="WAVE_FORMAT_G728_CELP" value="0x0041" />
+      <Enum name="WAVE_FORMAT_MPEG" value="0x0050" />
+      <Enum name="WAVE_FORMAT_MPEGLAYER3" value="0x0055" />
+      <Enum name="WAVE_FORMAT_CIRRUS" value="0x0060" />
+      <Enum name="WAVE_FORMAT_ESPCM" value="0x0061" />
+      <Enum name="WAVE_FORMAT_VOXWARE" value="0x0062" />
+      <Enum name="WAVEFORMAT_CANOPUS_ATRAC" value="0x0063" />
+      <Enum name="WAVE_FORMAT_G726_ADPCM" value="0x0064" />
+      <Enum name="WAVE_FORMAT_G722_ADPCM" value="0x0065" />
+      <Enum name="WAVE_FORMAT_DSAT" value="0x0066" />
+      <Enum name="WAVE_FORMAT_DSAT_DISPLAY" value="0x0067" />
+      <Enum name="WAVE_FORMAT_SOFTSOUND" value="0x0080" />
+      <Enum name="WAVE_FORMAT_RHETOREX_ADPCM" value="0x0100" />
+      <Enum name="WAVE_FORMAT_CREATIVE_ADPCM" value="0x0200" />
+      <Enum name="WAVE_FORMAT_CREATIVE_FASTSPEECH8" value="0x0202" />
+      <Enum name="WAVE_FORMAT_CREATIVE_FASTSPEECH10" value="0x0203" />
+      <Enum name="WAVE_FORMAT_QUARTERDECK" value="0x0220" />
+      <Enum name="WAVE_FORMAT_FM_TOWNS_SND" value="0x0300" />
+      <Enum name="WAVE_FORMAT_BTV_DIGITAL" value="0x0400" />
+      <Enum name="WAVE_FORMAT_OLIGSM" value="0x1000" />
+      <Enum name="WAVE_FORMAT_OLIADPCM" value="0x1001" />
+      <Enum name="WAVE_FORMAT_OLICELP" value="0x1002" />
+      <Enum name="WAVE_FORMAT_OLISBC" value="0x1003" />
+      <Enum name="WAVE_FORMAT_OLIOPR" value="0x1004" />
+      <Enum name="WAVE_FORMAT_LH_CODEC" value="0x1100" />
+      <Enum name="WAVE_FORMAT_NORRIS" value="0x1400" />
+      <Enum name="WAVE_FORMAT_ISIAUDIO" value="0x1401" />
+      <Enum name="WAVE_FORMAT_SOUNDSPACE_MUSICOMPRESS" value="0x1500" />
+      <Enum name="VoxWare RT24 speech codec" value="0x181C" />
+      <Enum name="NCT ALF2CD codec" value="0x1FC4" />
+      <Enum name="WAVE_FORMAT_AC3" value="0x2000" />
+      <Enum name="MEDIA_SUBTYPE_DTS" value="0x2001" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_1" value="0x674f" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_2" value="0x6750" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_3" value="0x6751" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_1_PLUS" value="0x676f" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_2_PLUS" value="0x6770" />
+      <Enum name="WAVE_FORMAT_OGG_VORBIS_3_PLUS" value="0x6771" />
+      <Enum name="GSM-AMR (CBR, no SID)" value="0x7A21" />
+      <Enum name="GSM-AMR (VBR, including SID)" value="0x7A22" />
+    </Field>
+    <Field name="nChannels" type="u16"/>
+    <Field name="nSamplesPerSec" type="u32"/>
+    <Field name="nAvgBytesPerSec" type="u32"/>
+    <Field name="nBlockAlign" type="u16"/>
+    <Field name="wBitsPerSample" type="u16"/>
+    <Field name="cbSize" type="u16"/>
+    <Array name="data" type="b1" length="cbSize"/>
+  </Struct>
+  <Struct name="fact">
+    <Field name="Number of samples" type="u32"/>
+  </Struct>
+  <Struct name="IARL">
+    <Description>Archival Location. Indicates where the subject of the file is archived.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IART">
+    <Description>Artist. Lists the artist of the original subject of the file. For example, "Michaelangelo."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ICMS">
+    <Description>Commissioned. Lists the name of the person or organization that commissioned the subject of the file. For example, "Pope Julian II."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ICMT">
+    <Description>Comments. Provides general comments about the file or the subject of the file. If the comment is several sentences long, end each sentence with a period. Do not include newline characters.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ICOP">
+    <Description>Copyright. Records the copyright information for the file. For example, "Copyright Encyclopedia International 1991." If there are multiple copyrights, separate them by a semicolon followed by a space.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ICRD">
+    <Description>Creation date. Specifies the date the subject of the file was created. List dates in year-month-day format, padding one-digit months and days with a zero on the left. For example, "1553-05-03" for May 3, 1553.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ICRP">
+    <Description>Cropped. Describes whether an image has been cropped and, if so, how it was cropped. For example, "lower right corner."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IDIM">
+    <Description>Dimensions. Specifies the size of the original subject of the file. For example, "8.5 in h, 11 in w."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IDPI">
+    <Description>Dots Per Inch. Stores dots per inch setting of the digitizer used to produce the file, such as "300."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IENG">
+    <Description>Engineer. Stores the name of the engineer who worked on the file. If there are multiple engineers, separate the names by a semicolon and a blank. For example, "Smith, John; Adams, Joe."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IGNR">
+    <Description>Genre. Describes the original work, such as, "landscape," "portrait," "still life," etc.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IKEY">
+    <Description>Keywords. Provides a list of keywords that refer to the file or subject of the file. Separate multiple keywords with a semicolon and a blank. For example, "Seattle; aerial view; scenery."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ILGT">
+    <Description>Lightness. Describes the changes in lightness settings on the digitizer required to produce the file. Note that the format of this information depends on hardware used.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IMED">
+    <Description>Medium. Describes the original subject of the file, such as, "computer image," "drawing," "lithograph," and so forth.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="INAM">
+    <Description>Name. Stores the title of the subject of the file, such as, "Seattle From Above."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IPLT">
+    <Description>Palette Setting. Specifies the number of colors requested when digitizing an image, such as "256."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="IPRD">
+    <Description>Product. Specifies the name of the title the file was originally intended for, such as "Encyclopedia of Pacific Northwest Geography."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ISBJ">
+    <Description>Subject. Describes the conbittents of the file, such as "Aerial view of Seattle."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ISFT">
+    <Description>Software. Identifies the name of the software package used to create the file, such as "Microsoft WaveEdit."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ISHP">
+    <Description>Sharpness. Identifies the changes in sharpness for the digitizer required to produce the file (the format depends on the hardware used).</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ISRC">
+    <Description>Source. Identifies the name of the person or organization who supplied the original subject of the file. For example, "Trey Research."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ISRF">
+    <Description>Source Form. Identifies the original form of the material that was digitized, such as "slide," "paper," "map," and so forth. This is not necessarily the same as IMED.</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="ITCH">
+    <Description>Technician. Identifies the technician who digitized the subject file. For example, "Smith, John."</Description>
+    <Field name="value" type="z"/>
+  </Struct>
+  <Struct name="DISP">
+    <Description>A DISP chunk contains easily rendered and displayable objects associated with an instance of a more complex object in a RIFF form (e.g. sound file, AVI movie).</Description>
+    <Field name="type" type="i32">
+      <Enum name="CF_TEXT" value="1"/>
+      <Enum name="CF_BITMAP" value="2"/>
+      <Enum name="CF_METAFILEPICT" value="3"/>
+      <Enum name="CF_SYLK" value="4"/>
+      <Enum name="CF_DIF" value="5"/>
+      <Enum name="CF_TIFF" value="6"/>
+      <Enum name="CF_OEMTEXT" value="7"/>
+      <Enum name="CF_DIB" value="8"/>
+      <Enum name="CF_PALETTE" value="9"/>
+      <Enum name="CF_PENDATA" value="10"/>
+      <Enum name="CF_RIFF" value="11"/>
+      <Enum name="CF_WAVE" value="12"/>
+      <Enum name="CF_UNICODETEXT" value="13"/>
+      <Enum name="CF_ENHMETAFILE" value="14"/>
+    </Field>
+    <Field name="text" type="z" condition="$(type) == 1"/>
+    <Array name="data" type="b1" condition="$(type) != 1"/>
+  </Struct>
+  <Struct name="cuePoint">
+    <Field name="dwName" type="u32"/>
+    <Field name="dwPosition" type="u32"/>
+    <Field name="fccChunk" type="s4"/>
+    <Field name="dwChunkStart" type="u32"/>
+    <Field name="dwBlockStart" type="u32"/>
+    <Field name="dwSampleOffset" type="u32"/>
+  </Struct>
+  <Struct name="cue ">
+    <Description>The &lt;cue-ck&gt; cue-points chunk identifies a series of positions in the waveform data stream.</Description>
+    <Field name="dwCuePoints" type="u32"/>
+    <Array name="cuePoint" type="cuePoint" length="dwCuePoints"/>
+  </Struct>
+</FileSchema>
